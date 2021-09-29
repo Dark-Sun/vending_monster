@@ -1,0 +1,10 @@
+Style/FrozenStringLiteralComment:
+  Enabled: false
+Style/Documentation:
+  Enabled: false
+Metrics/MethodLength:
+  Max: 20
+Metrics/LineLength:
+  Max: 100
+Style/DoubleNegation:
+  Enabled: false
