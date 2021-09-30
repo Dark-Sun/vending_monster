@@ -14,7 +14,7 @@ class Purchase
   end
 
   def call
-    success = validate_item &&
+    success = validate_item_id &&
               set_item &&
               validate_user_balance &&
               purchase &&
@@ -27,7 +27,7 @@ class Purchase
 
   attr_accessor :inventory, :user_balance, :item_id, :item, :message, :change
 
-  def validate_item
+  def validate_item_id
     if item_id.zero?
       @message = '! Your input is invalid'
       return false

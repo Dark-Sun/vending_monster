@@ -2,6 +2,8 @@ require './app/stores/inventory'
 require './app/services/messenger'
 require './app/services/purchase'
 
+USER_BALANCE_REGEXP = /[0-9]*[.]{0,1}[0-9]{0,2}/
+
 class VendingMachine
   def self.run
     new.call
@@ -60,9 +62,9 @@ class VendingMachine
     Messenger.print(msg: 'Enter your inseted amount of coins (in $):')
     Messenger.empty_line
 
-    input = gets.chomp.to_f
+    input = gets.chomp.match(USER_BALANCE_REGEXP)[0]
     input = format('%.2f', input).to_f
-    (input.truncate(2) * 100).to_i
+    (input * 100).to_i
   end
 
   def purchase(item_id, user_balance)
