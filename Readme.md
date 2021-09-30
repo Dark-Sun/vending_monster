@@ -1,3 +1,4 @@
+```
 / . / +----------+  /
 | . | | [] [] [] |  |
 | . | |          |  |
@@ -9,10 +10,14 @@
 | . | |       ∧∧    |   <__________|
 {___} +---  ⊂<   ⌒ヽ  
 {___} /       ∪ (＿つつ
+```
 
-* Vending Monster
 
-** Running
+# Vending Monster
+
+Simple Ruby console app that emulates vending machine
+
+## Running
 1. `git clone ..`
 2. `chmod +x ./vending_monster`
 3. `./vending_monster`
@@ -22,9 +27,9 @@ Optionally, to run with pry-byebug
 4. `bundle install`
 5. `bundle exec ./vending_monster` 
 
-** Running specs
+## Running specs
 
 `bundle exec rspec spec/`
 
-** Rubocop
+## Rubocop
 `rubocop`
