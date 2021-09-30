@@ -62,8 +62,7 @@ class VendingMachine
     Messenger.print(msg: 'Enter your inseted amount of coins (in $):')
     Messenger.empty_line
 
-    input = gets.chomp.match(USER_BALANCE_REGEXP)[0]
-    input = format('%.2f', input).to_f
+    input = gets.chomp.match(USER_BALANCE_REGEXP)[0].to_f
     (input * 100).to_i
   end
 
