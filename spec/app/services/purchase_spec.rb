@@ -20,11 +20,6 @@ RSpec.describe Purchase do
     end
   end
 
-  let(:inventory_items) do
-    [OpenStruct.new(name: 'Coca Cola', price: 200, quantity: 2),
-     OpenStruct.new(name: 'Sprite', price: 250, quantity: 0)]
-  end
-
   let(:master_of_coin) { double('master_of_coin') }
 
   let(:options) do
