@@ -14,7 +14,8 @@ class MasterOfCoin
   end
 
   def give_change(amount)
-    change = []
+    change_coins = []
+    change_amount = 0
 
     loop do
       coin = find_coin(amount)
@@ -22,16 +23,21 @@ class MasterOfCoin
       break unless coin
 
       coin.quantity -= 1
-      change.push(coin.value)
+      change_coins.push(coin.value)
+      change_amount += coin.value
       amount -= coin.value
     end
 
-    change.group_by(&:itself).map { |key, values| [key / 100.to_f, values.length] }.to_h
+    [change_amount, coins_summary(change_coins)]
   end
 
   private
 
   def find_coin(amount)
     coins.find { |coin| coin.value <= amount && !coin.quantity.zero? }
+  end
+
+  def coins_summary(change_coins)
+    change_coins.group_by(&:itself).map { |key, values| [key / 100.to_f, values.length] }.to_h
   end
 end

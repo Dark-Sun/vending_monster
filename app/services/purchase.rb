@@ -5,27 +5,26 @@ class Purchase
     new(**args).call
   end
 
-  def initialize(inventory:, user_balance:, item_id:)
+  STEPS = %w[validate_item_id set_item validate_user_balance
+             pop_item create_change print_change charge_user].freeze
+
+  def initialize(inventory:, user:, item_id:)
     @inventory = inventory
-    @user_balance = user_balance
+    @user = user
     @item_id = item_id
-    @change = 0
+    @received_change = 0
+    @coins = []
     @message = ''
   end
 
   def call
-    success = validate_item_id &&
-              set_item &&
-              validate_user_balance &&
-              purchase &&
-              give_change
-
+    success = STEPS.inject(true) { |result, step| result && send(step) }
     OpenStruct.new(success: success, message: message)
   end
 
   private
 
-  attr_accessor :inventory, :user_balance, :item_id, :item, :message, :change
+  attr_accessor :inventory, :user, :item_id, :item, :message, :received_change, :coins
 
   def validate_item_id
     if item_id.zero?
@@ -44,36 +43,48 @@ class Purchase
   end
 
   def validate_user_balance
-    if user_balance.zero?
-      @message = '! Arggh! Those are not coins! Insert valid coins!'
+    if user.balance.zero?
+      @message = '! Arggh! Those are not coins or you balance is 0!'
       return false
     end
 
-    return true if user_balance >= item.price
+    return true if user.enough_funds?(amount: item.price)
 
-    @message = "! Arggh! #{user_balance / 100.to_f}$ is not enough to buy #{item.name}"
+    @message = "! Arggh! #{user.humanized_balance} is not enough to buy #{item.name}"
     false
   end
 
-  def purchase
-    @change = user_balance - item.price
+  def pop_item
     inventory.pop(id: item_id)
-    @message = "Yay! Purchase successfull! Your change is #{change / 100.to_f}$"
+    @message = 'Yay! Purchase successfull!'
 
     true
   end
 
-  def give_change
-    return true if change.zero?
+  def create_change
+    expected_change = user.balance - item.price
+    return true if expected_change.zero?
 
-    coins = MasterOfCoin.instance.give_change(change)
+    @received_change, @coins = MasterOfCoin.instance.give_change(expected_change)
+    true
+  end
 
-    if coins.any?
+  def print_change
+    if coins&.any?
       preety_coins = coins.to_s.gsub(/[{|}]/, '').gsub('=>', '$ x ')
-      @message += "\nHere are the coins I could find: #{preety_coins}"
+      @message += "\nHere is your change I could find: #{preety_coins},"\
+                  " in total: #{@received_change / 100.to_f}$"
     else
       @message += "\nSorry man. No coins left for change :("
     end
+
+    true
+  end
+
+  # We should reduce from user balance the price of an item + all the change we gave
+  # so in case we didn't give enough change user can purchase other items
+  def charge_user
+    user.charge!(amount: item.price + received_change)
 
     true
   end

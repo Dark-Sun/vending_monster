@@ -1,5 +1,6 @@
 require 'spec_helper'
 require './app/stores/inventory'
+require './app/stores/user'
 require './app/services/purchase'
 
 RSpec.describe Purchase do
@@ -11,7 +12,7 @@ RSpec.describe Purchase do
 
       described_class.call(
         inventory: 'inventory',
-        user_balance: 'user_balance',
+        user: User.new(balance: 10_000),
         item_id: 'item_id'
       )
 
@@ -29,14 +30,14 @@ RSpec.describe Purchase do
   let(:options) do
     {
       inventory: Inventory.instance,
-      user_balance: 300,
+      user: User.new(balance: 10_000),
       item_id: 1
     }
   end
 
   before do
     allow(MasterOfCoin).to receive(:instance).and_return(master_of_coin)
-    allow(master_of_coin).to receive(:give_change).and_return([{ 500 => 2 }])
+    allow(master_of_coin).to receive(:give_change).and_return([1000, { 500 => 2 }])
   end
 
   before(:each) do
@@ -66,17 +67,17 @@ RSpec.describe Purchase do
 
     context('with invalid user balance') do
       it 'fails with error message' do
-        options[:user_balance] = 0
+        options[:user] = User.new(balance: 0)
         result = described_class.new(**options).call
 
         expect(result.success).to eq(false)
-        expect(result.message).to eq('! Arggh! Those are not coins! Insert valid coins!')
+        expect(result.message).to eq('! Arggh! Those are not coins or you balance is 0!')
       end
     end
 
     context('with user balance not enough for purchase') do
       it 'fails with error message' do
-        options[:user_balance] = 100
+        options[:user] = User.new(balance: 100)
         result = described_class.new(**options).call
 
         expect(result.success).to eq(false)
@@ -95,7 +96,7 @@ RSpec.describe Purchase do
 
     context('no coins for change available') do
       it 'sets error message' do
-        allow(master_of_coin).to receive(:give_change).and_return([])
+        allow(master_of_coin).to receive(:give_change).and_return([0, {}])
         result = described_class.new(**options).call
 
         expect(result.message).to include('Sorry man. No coins left for change')
@@ -106,7 +107,9 @@ RSpec.describe Purchase do
       it 'returns message with change' do
         result = described_class.new(**options).call
 
-        expect(result.message).to include('Here are the coins I could find: [500$ x 2]')
+        expect(result.message).to include(
+          'Here is your change I could find: 500$ x 2, in total: 10.0$'
+        )
       end
     end
   end

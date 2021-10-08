@@ -1,8 +1,9 @@
 require './app/stores/inventory'
+require './app/stores/user'
 require './app/services/messenger'
 require './app/services/purchase'
 
-USER_BALANCE_REGEXP = /[0-9]*[.]{0,1}[0-9]{0,2}/
+USER_BALANCE_REGEXP = /[0-9]*[.]{0,1}[0-9]{0,2}/.freeze
 
 class VendingMachine
   def self.run
@@ -17,21 +18,29 @@ class VendingMachine
     Messenger.clear
     print_greeting
 
+    create_user(balance: promt_user_balance)
+
     loop do
+      print_balance
       list_items
-      purchase(promt_item_id, promt_user_balance)
+      purchase(item_id: promt_item_id, user: user)
     end
   end
 
   private
 
-  attr_accessor :inventory
+  attr_accessor :inventory, :user
 
   def print_greeting
     Messenger.print_asset(name: 'machine')
     Messenger.empty_line
     Messenger.print(msg: 'Hello, I\'m a Vending Moonster!')
     Messenger.empty_line
+  end
+
+  def print_balance
+    Messenger.empty_line
+    Messenger.print(msg: "Your balance: #{user.humanized_balance}")
   end
 
   def list_items
@@ -48,15 +57,6 @@ class VendingMachine
     end
   end
 
-  def promt_item_id
-    Messenger.empty_line
-    Messenger.print(msg: 'Type me an item number you want / type q to exit: ')
-    Messenger.empty_line
-    input = gets.chomp
-    exit if input == 'q'
-    input.to_i
-  end
-
   def promt_user_balance
     Messenger.empty_line
     Messenger.print(msg: 'Enter your inseted amount of coins (in $):')
@@ -66,11 +66,25 @@ class VendingMachine
     (input * 100).to_i
   end
 
-  def purchase(item_id, user_balance)
+  def create_user(balance:)
+    @user = User.new(balance: balance)
+  end
+
+  def promt_item_id
+    Messenger.empty_line
+    Messenger.print(msg: 'Type me an item number you want / type q to exit: ')
+    Messenger.empty_line
+    input = gets.chomp
+    exit if input == 'q'
+
+    input.to_i
+  end
+
+  def purchase(item_id:, user:)
     Messenger.clear
     result = Purchase.call(
       inventory: inventory,
-      user_balance: user_balance,
+      user: user,
       item_id: item_id
     )
 
